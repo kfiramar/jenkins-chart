@@ -1,0 +1,211 @@
+controller:
+  # jenkinsUrl: "http://34.120.136.45:8080"
+  image: "jenkins/jenkins"
+  tag: "2.426.2-jdk17"
+  adminUser: "kfir"
+  adminPassword: "FphrGnr"
+  serviceType: ClusterIP
+  servicePort: 8080
+  installPlugins:
+    - kubernetes:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+    - job-dsl:latest
+    - blueocean:latest
+    - credentials-binding:latest
+    - git-parameter:latest
+    - pipeline-utility-steps:latest
+    - slack:latest
+    - docker-plugin:latest
+    - matrix-auth:latest
+    - pipeline-stage-view:latest
+    - build-timeout:latest
+    - credentials:latest
+    - ssh-slaves:latest
+    - timestamper:latest
+    - ws-cleanup:latest
+    - ant:latest
+    - gradle:latest
+    - email-ext:latest
+    - ldap:latest
+    - pam-auth:latest
+    - nodejs:latest
+
+  numExecutors: 1
+  ingress:
+    enabled: true
+    apiVersion: "networking.k8s.io/v1"
+    paths:
+      - path: "/"
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # tls:
+    #   - secretName: jenkins-tls
+    #     hosts:
+    #       - "jenkins.autoops.com"
+
+agent:
+  enabled: true
+  image: "jenkins/inbound-agent"
+  tag: "latest"
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+persistence:
+  enabled: true
+  size: "10Gi"
+  storageClass: "standard-rwo"
+
+networkPolicy:
+  enabled: false
+
+rbac:
+  create: true
+  readSecrets: false
+
+serviceAccount:
+  create: true
+  name: null
+  annotations: {}
+
+backup:
+  enabled: false
+
+additionalAgents:
+  python:
+    label: "python"
+    image: "jenkins/jnlp-agent-python"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  zip-job-docker:
+    label: "zip-job-docker"
+    image: "34.165.44.255/assingment_work/agent-image"
+    tag: "1.0.0"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  go:
+    label: "go"
+    image: "jenkins/jnlp-agent-go"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  nodejs:
+    label: "nodejs"
+    image: "jenkins/jnlp-agent-nodejs"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  maven:
+    label: "maven"
+    image: "jenkins/jnlp-agent-maven"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  docker:
+    label: "docker"
+    image: "jenkins/jnlp-agent-docker"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  ansible:
+    label: "ansible"
+    image: "jenkins/jnlp-agent-ansible"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+  kubectl:
+    label: "kubectl"
+    image: "jenkins/jnlp-agent-kubectl"
+    tag: "latest"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    numExecutors: 3
+
+# Add configurations for additional clouds (e.g., different Kubernetes clusters)
+additionalClouds: {}
+# Example:
+#  my-cloud:
+#    name: "my-cloud"
+#    kubernetesURL: "https://my.cluster.url"
+#    credentialsId: "my-k8s-creds"
+
+# Resource limits and requests
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
+# Custom script approvals
+scriptApproval:
+  - "method groovy.json.JsonSlurper parseText java.lang.String"
+  - "new java.util.Random java.lang.String"
+
+# Environment variables for the Jenkins controller
+# controller.containerEnv:
+#   - name: JAVA_OPTS
+#     value: "-Djenkins.install.runSetupWizard=false"

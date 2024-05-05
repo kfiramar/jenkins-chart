@@ -1,0 +1,110 @@
+controller:
+  replicaCount: 1
+  javaOpts: "-Xmx1500m -Xms512m"
+  numExecutors: 0
+  resources:
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+  serviceType: LoadBalancer
+  installPlugins:
+    - kubernetes:4203.v1dd44f5b_1cf9
+    - workflow-job:1400.v7fd111b_ec82f
+    - credentials-binding:657.v2b_19db_7d6e6d
+    - git:5.2.1
+    - matrix-auth:3.2.2
+    - aws-credentials:231.v08a_59f17d742
+    - terraform:1.0.10
+    - ansible:307.va_1f3ef06575a_
+    - role-strategy:717.v6a_69a_fe98974
+    - codebuild-cloud:0.9.23.v96779e2e6251
+
+  JCasC:
+    securityRealm: |
+      local:
+        allowsSignup: false
+        enableCaptcha: false
+        users:
+          - id: "admin"
+            name: "Admin"
+            password: "${ADMIN_PASSWORD}"
+    authorizationStrategy: |
+      loggedInUsersCanDoAnything:
+        allowAnonymousRead: false
+  admin:
+    userName: "admin"
+    password:
+  ingress:
+    enabled: true
+    apiVersion: "networking.k8s.io/v1"
+    paths:
+      - path: "/"
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+
+agent:
+  podTemplates:
+    python: |
+      - name: python
+        label: jenkins-python
+        serviceAccount: jenkins
+        containers:
+          - name: python
+            image: python:3.9
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            privileged: true
+            resourceRequestCpu: "400m"
+            resourceRequestMemory: "512Mi"
+            resourceLimitCpu: "1"
+            resourceLimitMemory: "1024Mi"
+    maven: |
+      - name: maven
+        label: jenkins-maven
+        serviceAccount: jenkins
+        containers:
+          - name: maven
+            image: maven:3.8.4-openjdk-11
+            command: "/bin/sh -c"
+            args: "cat"
+            ttyEnabled: true
+            privileged: true
+            resourceRequestCpu: "400m"
+            resourceRequestMemory: "512Mi"
+            resourceLimitCpu: "1"
+            resourceLimitMemory: "1024Mi"
+
+persistence:
+  enabled: true
+  size: "20Gi"
+  storageClass: "standard-rwo"
+
+
+serviceAccount:
+  create: true
+  name: jenkins-sa
+
+# additionalClouds:
+#   k8s-cloud:
+#    kubernetesURL: https://34.165.9.175
+#    additionalAgentsOverride: true
+#    additionalAgents:
+#      maven:
+#        podName: python
+#        customJenkinsLabels: python
+#        image:
+#          repository: jenkins/jnlp-agent-python
+#          tag: latest
+#        namespace: jenkins-slaves
